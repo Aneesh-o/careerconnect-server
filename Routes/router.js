@@ -5,6 +5,8 @@ const multerMiddleWare = require("../Middleware/multerMiddleware")
 const employerController = require("../Controller/employerController")
 const addJobController = require('../Controller/addJobController')
 const messageController = require('../Controller/messageController')
+const multerResumeMiddlwWare = require('../Middleware/multerResume')
+
 
 const router = new express.Router()
 
@@ -75,10 +77,26 @@ router.get("/applieduserJobs/:id", addJobController.getJobsByApplicant);
 router.post("/send-message", messageController.sendMessage);
 
 //  Get all messages between two users (GET)
-router.get("/getmessages", messageController.getAllMessages);
+router.post("/getmessages", messageController.getAllMessages);
 
 // get job
 router.get("/employerDetails", employerController.employerdetails);
+
+// Update resume
+router.put("/jobseeker-resume", jwtMiddleWare, multerResumeMiddlwWare.single("resume"), userControler.seekerResumeUpdationController);
+
+router.get("/download-resume/:filename", (req, res) => {
+    const { filename } = req.params;
+    const filePath = path.join(__dirname, "../uploads", filename);
+
+    res.download(filePath, filename, (err) => {
+        if (err) {
+            console.error("Error downloading file:", err);
+            res.status(500).json({ error: "File not found or server error" });
+        }
+    });
+});
+
 
 
 module.exports = router

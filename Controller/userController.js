@@ -42,11 +42,11 @@ exports.seekerLoginController = async (req, res) => {
 // Updation
 exports.seekerProfileUpdationController = async (req, res) => {
     console.log("Inside seekerProfileUpdationController");
-    const { email, username, phoneNumber, gender, birthDate, address, university, qualification, yearOfGraduation, experienceInYears, currentEmployer, currentSalary, expectedSalary ,profilePic} = req.body
+    const { email, username, phoneNumber, gender, birthDate, address, university, qualification, yearOfGraduation, experienceInYears, currentEmployer, currentSalary, expectedSalary, profilePic } = req.body
     const userId = req.userId
-    const uploadProfilePic = req.file?req.file.filename:profilePic
+    const uploadProfilePic = req.file ? req.file.filename : profilePic
     try {
-        const updatedUser = await users.findByIdAndUpdate({ _id: userId }, { email, username, phoneNumber, gender, birthDate, address, university, qualification, yearOfGraduation, experienceInYears, currentEmployer, currentSalary, expectedSalary ,profilePic:uploadProfilePic }, { new: true })
+        const updatedUser = await users.findByIdAndUpdate({ _id: userId }, { email, username, phoneNumber, gender, birthDate, address, university, qualification, yearOfGraduation, experienceInYears, currentEmployer, currentSalary, expectedSalary, profilePic: uploadProfilePic }, { new: true })
         await updatedUser.save()
         res.status(200).json(updatedUser)
     } catch (error) {
@@ -93,5 +93,48 @@ exports.getProfileById = async (req, res) => {
         res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ message: "Server error", error });
+    }
+};
+
+
+exports.seekerResumeUpdationController = async (req, res) => {
+    try {
+        const userId = req.userId;
+
+        if (!userId) {
+            return res.status(401).json({ error: "Unauthorized: User ID missing" });
+        }
+
+        if (!req.file) {
+            return res.status(400).json({ error: "No resume file uploaded" });
+        }
+
+        const allowedMimeTypes = ["application/pdf", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
+        if (!allowedMimeTypes.includes(req.file.mimetype)) {
+            return res.status(400).json({ error: "Invalid file type. Only PDF and DOCX are allowed." });
+        }
+
+        // Find user first
+        const existingUser = await users.findById(userId); // ✅ Ensure 'User' model is used
+        if (!existingUser) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Delete old resume if it exists
+        if (existingUser.resume) {
+            const oldResumePath = path.join(__dirname, "../uploads", existingUser.resume);
+            if (fs.existsSync(oldResumePath)) {
+                fs.unlinkSync(oldResumePath);
+            }
+        }
+
+        // Update resume field
+        existingUser.resume = req.file.filename;
+        await existingUser.save();
+
+        res.status(200).json({ message: "Resume updated successfully", resume: existingUser.resume });
+    } catch (error) {
+        console.error("Error updating resume:", error);
+        res.status(500).json({ error: "Internal server error" });
     }
 };

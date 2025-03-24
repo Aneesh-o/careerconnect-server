@@ -37,8 +37,10 @@ exports.sendMessage = async (req, res) => {
 
 // Retrieve all messages between two users
 exports.getAllMessages = async (req, res) => {
+    console.log("get")
     try {
         const { senderId, receiverId } = req.body;
+        console.log(senderId, receiverId)
 
         if (!senderId || !receiverId) {
             return res.status(400).json({ success: false, error: "Both senderId and receiverId are required" });
