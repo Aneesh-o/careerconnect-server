@@ -1,10 +1,13 @@
+const { sendEmail } = require("../Email/sendEmail");
 const Job = require("../Models/jobModel");
+const users = require('../Models/userModel')
+
 
 // Add job
 exports.addJobDetails = async (req, res) => {
     console.log("Inside addJobDetails");
     const { jobLocation, jobType, skills, salaryRange, companyName, designation, description } = req.body;
-    const userId = req.userId; // Get userId from middleware (authentication)
+    const userId = req.userId;
     try {
         const newJob = new Job({ jobLocation, designation, jobType, skills, salaryRange, userId, companyName, description });
         await newJob.save();
@@ -19,7 +22,7 @@ exports.addJobDetails = async (req, res) => {
 exports.getAllJobDetails = async (req, res) => {
     console.log("Inside getAllJobDetails");
     try {
-        const getJobs = await Job.find().populate("applicants.userId", "name email"); // Populate applicant details
+        const getJobs = await Job.find().populate("applicants.userId", "name email");
         res.status(200).json(getJobs);
     } catch (error) {
         console.error("Error fetching all jobs:", error);
@@ -45,8 +48,14 @@ exports.applyForJob = async (req, res) => {
     console.log("Inside applyForJob");
     const { jobId } = req.params;
     const userId = req.userId;
+    const userDetails = await users.findById(userId)
+    const userEmail = userDetails.email
+    console.log('userDetails', userDetails.email);
+
+
     try {
         const job = await Job.findById(jobId);
+        const jobTitile = job.designation
         if (!job) {
             return res.status(404).json({ error: "Job not found" });
         }
@@ -55,6 +64,7 @@ exports.applyForJob = async (req, res) => {
         if (alreadyApplied) {
             return res.status(400).json({ error: "User already applied for this job" });
         }
+
         // Add new applicant
         job.applicants.push({
             userId,
@@ -62,6 +72,7 @@ exports.applyForJob = async (req, res) => {
         });
         await job.save();
         res.status(200).json({ message: "Applied successfully", job });
+        sendEmail(userEmail,jobTitile)
     } catch (error) {
         console.error("Error applying for job:", error);
         res.status(500).json({ error: "Failed to apply for job" });
@@ -75,12 +86,11 @@ exports.getMyPostedJobsWithApplicants = async (req, res) => {
         if (!userId) {
             return res.status(401).json({ error: "Unauthorized. Employer ID missing." });
         }
-
         const jobs = await Job.find({ userId })
             .populate({
                 path: "applicants.userId",
                 model: "users",
-                select: "username email phoneNumber skills education"
+                select: "username email phoneNumber skills qualification"
             })
             .select("companyName designation jobLocation jobType skills status applicants");
 
@@ -104,9 +114,9 @@ exports.getMyPostedJobsWithApplicants = async (req, res) => {
                 email: applicant.userId?.email || "Unknown",
                 phoneNumber: applicant.userId?.phoneNumber || "Unknown",
                 skills: applicant.userId?.skills || "Not provided",
-                education: applicant.userId?.education || "Not provided",
+                qualification: applicant.userId?.qualification || "Not provided",
                 appliedAt: applicant.appliedAt,
-                status: applicant.status || "Pending"  // ✅ Added status field
+                status: applicant.status || "Pending"
             }))
         }));
 
@@ -243,14 +253,14 @@ exports.selectApplicant = async (req, res) => {
 // };
 
 
+
 // deleteUserjobs
 exports.deleteUserPostedjobs = async (req, res) => {
     console.log("Inside deleteUserPostedjobs");
-    const userId = req.userId; // Extracted from JWT middleware
-    const jobId = req.params.id;  // ✅ Corrected parameter name
+    const userId = req.userId;
+    const jobId = req.params.id;
 
     try {
-        // ✅ Ensure the job is deleted if it belongs to the user
         const deletedJob = await Job.findOneAndDelete({ _id: jobId, userId });
 
         if (!deletedJob) {

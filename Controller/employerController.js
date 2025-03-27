@@ -42,10 +42,13 @@ exports.loginRegistrationController = async (req, res) => {
 exports.employeUpdateController = async (req, res) => {
     console.log("Iniside employeUpdateController");
     const { email, companyname, phoneNumber, address ,profilePic} = req.body
+
+    console.log(req.body);
+    
     const userId = req.userId
     const uploadProfilePic = req.file?req.file.filename:profilePic
     try {
-        const newEmployer = await employers.findByIdAndUpdate({ _id: userId }, { email, companyname, phoneNumber, address,profileImg:uploadProfilePic }, { new: true })
+        const newEmployer = await employers.findByIdAndUpdate({ _id: userId }, { email, companyname, phoneNumber, address,profilePic:uploadProfilePic }, { new: true })
         await newEmployer.save()
         res.status(200).json(newEmployer)
     } catch (error) {

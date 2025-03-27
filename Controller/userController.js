@@ -1,5 +1,7 @@
 const users = require("../Models/userModel")
 const jwt = require('jsonwebtoken')
+const fs = require("fs");
+const path = require("path");
 
 
 // Registration
