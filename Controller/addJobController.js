@@ -51,8 +51,6 @@ exports.applyForJob = async (req, res) => {
     const userDetails = await users.findById(userId)
     const userEmail = userDetails.email
     console.log('userDetails', userDetails.email);
-
-
     try {
         const job = await Job.findById(jobId);
         const jobTitile = job.designation

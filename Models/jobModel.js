@@ -23,7 +23,7 @@ const addJobSchema = new mongoose.Schema({
         type: String
     }, userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "users", // Ensure it correctly references "users" collection
+        ref: "users", 
         required: true
     }, status: {
         type: String,

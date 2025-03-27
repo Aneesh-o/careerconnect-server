@@ -82,12 +82,12 @@ exports.getJobsSeekerDetails = async (req, res) => {
 
 exports.getProfileById = async (req, res) => {
     try {
-        const { id } = req.params; // ✅ Get id from params
+        const { id } = req.params; 
         if (!id) {
             return res.status(400).json({ message: "User ID is required" });
         }
 
-        const user = await users.findById(id); // Assuming you're using Mongoose
+        const user = await users.findById(id); 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
@@ -117,7 +117,7 @@ exports.seekerResumeUpdationController = async (req, res) => {
         }
 
         // Find user first
-        const existingUser = await users.findById(userId); // ✅ Ensure 'User' model is used
+        const existingUser = await users.findById(userId); 
         if (!existingUser) {
             return res.status(404).json({ error: "User not found" });
         }

@@ -36,10 +36,6 @@ io.on("connection", (socket) => {
     // Handle sending messages
     socket.on("send", async ({ senderId, receiverId, message, createdAt }) => {
         try {
-            // const newMessage = await Messages.create({ senderId, receiverId, message });
-            // await newMessage.save();
-
-            // const receiverSocketId = users[receiverId];
             const senderSocketId = users[senderId];
 
             if (senderSocketId) {
